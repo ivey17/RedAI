@@ -208,7 +208,7 @@ export const Profile = ({ onOpenAI, onAlbumClick, onPostClick, onOpenDeepDecisio
                       content: (
                         <div className="space-y-4 font-sans">
                           <p className="text-sm text-gray-700 leading-relaxed">
-                            RedAI 分析了全网超过 <strong>500+</strong> 篇巴黎旅游笔记，根据您「想要出片」同时「也想要省钱」的需求，为您规划了以下高性价比路线：
+                            RedAI 分析了您输入的巴黎旅游笔记，根据您「想要出片」同时「也想要省钱」的需求，为您规划了以下高性价比路线：
                           </p>
                           <div className="bg-red-50 p-4 rounded-xl border border-red-100">
                             <h4 className="font-bold text-red-600 mb-2">📸 出片 & 💰 省钱核心策略</h4>
@@ -246,7 +246,7 @@ export const Profile = ({ onOpenAI, onAlbumClick, onPostClick, onOpenDeepDecisio
                       content: (
                         <div className="space-y-4 font-sans">
                           <p className="text-sm text-gray-700 leading-relaxed">
-                            RedAI 对比了全网 <strong>120篇</strong> 深度评测笔记，综合您的「游戏性能」与「轻薄办公」双重需求，为您推荐以下两款全能型笔记本：
+                            RedAI 对比了您输入的深度评测笔记，综合您的「游戏性能」与「轻薄办公」双重需求，为您推荐以下两款全能型笔记本：
                           </p>
                           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                             <table className="w-full text-xs text-left">
