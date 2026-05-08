@@ -148,8 +148,10 @@ def get_all_posts():
     if supabase_client:
         db_posts = supabase_client.select("posts")
     
-    if db_posts:
+    if db_posts and isinstance(db_posts, list) and len(db_posts) > 0:
         return db_posts
+    
+    print("DB empty or failed, returning mock posts.")
     return list(MOCK_POSTS_STORE.values())
 
 def get_posts_by_ids(post_ids: list):
