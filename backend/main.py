@@ -249,6 +249,53 @@ def extract_preferences(req: PreferenceExtractRequest):
             "tags": []
         }
 
+@app.post("/api/ai/extract-decision-params")
+def extract_decision_params(req: DecisionParamRequest):
+    if not req.text or len(req.text.strip()) < 2:
+        return {
+            "success": False, 
+            "message": "内容太简略啦，请稍微详细描述一下？",
+            "tags": []
+        }
+    
+    prompts = {
+        "goal": """你是一个专业的决策目标提取助手。请从用户描述中提取出核心决策目标。
+        要求：
+        1. 必须以 JSON 格式输出：{"tags": ["目标标签"], "suggestion": ""}
+        2. 目标标签必须简洁，不超过 8 个字。
+        3. 如果无法提取有效目标，输出：{"tags": [], "suggestion": "提示词：您可以描述想买什么、想去哪里或者想解决什么问题。"}""",
+        
+        "conditions": """你是一个专业的决策条件提取助手。请从用户描述中提取出核心关注点/限制条件。
+        要求：
+        1. 必须以 JSON 格式输出：{"tags": ["条件1", "条件2"], "suggestion": ""}
+        2. 每个标签不超过 10 个字。最多提取 3 个。
+        3. 如果内容模糊，输出：{"tags": [], "suggestion": "提示词：您可以说说预算范围、特定需求（如：要防晒、要省钱）等。"}""",
+        
+        "format": """你是一个专业的输出格式提取助手。请从用户描述中提取出希望 AI 以何种形式输出结果。
+        要求：
+        1. 必须以 JSON 格式输出：{"tags": ["格式标签"], "suggestion": ""}
+        2. 格式参考：对比表格、详细攻略、红黑榜、优缺点分析等。
+        3. 如果没提到格式，输出：{"tags": ["常规建议"], "suggestion": ""}"""
+    }
+    
+    sys_prompt = prompts.get(req.param_type, prompts["goal"])
+    user_prompt = f"用户描述：{req.text}"
+    
+    try:
+        raw_result = generate_decision(sys_prompt, user_prompt)
+        json_str = raw_result.replace("```json", "").replace("```", "").strip()
+        import json
+        data = json.loads(json_str)
+        
+        return {
+            "success": len(data.get("tags", [])) > 0,
+            "tags": data.get("tags", []),
+            "suggestion": data.get("suggestion", "")
+        }
+    except Exception as e:
+        print(f"Decision extraction error: {e}")
+        return {"success": False, "message": "AI 解析失败", "tags": []}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

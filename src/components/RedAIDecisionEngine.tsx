@@ -27,6 +27,7 @@ export const RedAIDecisionEngine = ({ onBack, posts, onRemove, onPostClick, onAd
   const [goal, setGoal] = useState<string | null>(null);
   const [conditions, setConditions] = useState<string[]>([]);
   const [format, setFormat] = useState<string | null>(null);
+  const [suggestion, setSuggestion] = useState<string | null>("欢迎使用 RedAI 决策引擎！首先告诉我你的决策目标是什么？");
 
   // Sync is now handled by parent via props
 
@@ -36,39 +37,49 @@ export const RedAIDecisionEngine = ({ onBack, posts, onRemove, onPostClick, onAd
     const currentQ = question;
     setQuestion('');
     setChatLoading(true);
-    
-    // Simulate AI extraction and processing for natural language parsing
-    setTimeout(async () => {
+    setSuggestion(null); // Clear previous suggestion
+
+    try {
       if (step === 0) {
-        let extractedGoal = currentQ.replace(/我想|我要|帮我|请|去|做个|做/g, '').trim();
-        if (extractedGoal.length > 10) extractedGoal = extractedGoal.substring(0, 10) + '...';
-        setGoal(extractedGoal || '未指定目标');
-        setStep(1);
-        setChatLoading(false);
+        const res = await api.extractDecisionParam(currentQ, 'goal');
+        if (res.success) {
+          setGoal(res.tags[0]);
+          setStep(1);
+          setSuggestion("好的，目标已锁定。接下来，你对这个决策有哪些具体的关注条件或要求吗？（例如：预算、特定偏好等）");
+        } else {
+          setSuggestion(res.suggestion || res.message || "没太听清你的目标，能换种说法或者说详细一点吗？");
+        }
       } else if (step === 1) {
-        const extractedConditions = currentQ.split(/[,，\s、和及]/).map(s => s.replace(/要求|还要|需要/g, '').trim()).filter(Boolean).slice(0, 3);
-        setConditions(extractedConditions.length > 0 ? extractedConditions : ['无特殊条件']);
-        setStep(2);
-        setChatLoading(false);
+        const res = await api.extractDecisionParam(currentQ, 'conditions');
+        if (res.success) {
+          setConditions(prev => [...prev, ...res.tags].slice(0, 3));
+          setStep(2);
+          setSuggestion("收到！最后，你希望我以什么样的格式输出分析结果？（例如：对比表格、详细攻略、红黑榜等）");
+        } else {
+          setSuggestion(res.suggestion || res.message || "这些条件有点模糊，能举几个具体的例子吗？");
+        }
       } else if (step === 2) {
-        let extractedFormat = currentQ.replace(/输出|给我|我要|按照|按/g, '').trim();
-        if (extractedFormat.length > 10) extractedFormat = extractedFormat.substring(0, 10) + '...';
-        const finalFormat = extractedFormat || '常规输出';
-        setFormat(finalFormat);
-        setStep(3);
-        
-        // Final AI Result generation after all tags extracted
-        try {
+        const res = await api.extractDecisionParam(currentQ, 'format');
+        if (res.success) {
+          const finalFormat = res.tags[0];
+          setFormat(finalFormat);
+          setStep(3);
+          setSuggestion("正在为您生成深度决策报告...");
+          
+          // Final AI Result generation
           const finalPrompt = `我的目标是：${goal}。我的条件是：${conditions.join(', ')}。请给我：${finalFormat}。`;
-          const res = await api.chat(posts.map(p => p.id), finalPrompt);
-          setAiResult(res.result);
-        } catch (err: any) {
-          alert('AI 处理失败: ' + err.message);
-        } finally {
-          setChatLoading(false);
+          const chatRes = await api.chat(posts.map(p => p.id), finalPrompt);
+          setAiResult(chatRes.result);
+        } else {
+          setSuggestion(res.suggestion || res.message || "请告诉我你想要的输出格式。");
         }
       }
-    }, 1200);
+    } catch (err: any) {
+      console.error(err);
+      setSuggestion("抱歉，系统处理出现了一点小状况，请稍后再试。");
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   return (
@@ -240,7 +251,7 @@ export const RedAIDecisionEngine = ({ onBack, posts, onRemove, onPostClick, onAd
         </section>
 
         {/* Chat / Result Area */}
-        {(aiResult || chatLoading) && (
+        {(aiResult || chatLoading || suggestion) && (
           <section className="px-3 py-6 space-y-6">
             <div className="flex gap-3">
               <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 text-white shadow-md">
@@ -254,14 +265,28 @@ export const RedAIDecisionEngine = ({ onBack, posts, onRemove, onPostClick, onAd
                       <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                       <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                     </div>
-                    <span className="text-[11px] text-gray-400">正在分析多篇笔记并生成建议...</span>
+                    <span className="text-[11px] text-gray-400">正在分析...</span>
                   </div>
+                ) : suggestion ? (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-red-50 p-4 rounded-2xl rounded-tl-none shadow-sm border border-red-100"
+                  >
+                    <p className="text-xs font-bold text-red-600 leading-relaxed">
+                      {suggestion}
+                    </p>
+                  </motion.div>
                 ) : (
-                  <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100"
+                  >
                     <div className="prose prose-sm text-gray-800 text-xs whitespace-pre-wrap leading-relaxed">
                       {aiResult}
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </div>
             </div>

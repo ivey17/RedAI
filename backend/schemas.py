@@ -60,3 +60,7 @@ class PreferenceExtractRequest(BaseModel):
 class PostSaveRequest(BaseModel):
     user_id: str
     post_id: str
+
+class DecisionParamRequest(BaseModel):
+    text: str
+    param_type: str # 'goal', 'conditions', 'format'

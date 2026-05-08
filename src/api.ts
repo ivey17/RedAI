@@ -245,5 +245,20 @@ export const api = {
       console.error(e);
       throw e;
     }
+  },
+
+  extractDecisionParam: async (text: string, type: 'goal' | 'conditions' | 'format') => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/extract-decision-params`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, param_type: type })
+      });
+      if (!response.ok) throw new Error('Extraction failed');
+      return await response.json();
+    } catch (e: any) {
+      console.error(e);
+      throw e;
+    }
   }
 };
