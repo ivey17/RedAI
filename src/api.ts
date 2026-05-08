@@ -102,9 +102,9 @@ export const api = {
       if (!response.ok) throw new Error('Failed to fetch album posts');
       const data = await response.json();
       return data.posts.map((p: any) => ({
-        id: p.post_id,
+        id: p.post_id || p.id,
         title: p.title,
-        imageUrl: p.image_urls?.[0] || '',
+        imageUrl: p.image_urls?.[0] || p.imageUrl || '',
         author: p.author || { name: '未知用户', avatar: '' },
         likes: p.likes || '0',
         description: p.raw_content

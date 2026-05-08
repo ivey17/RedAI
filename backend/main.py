@@ -60,21 +60,26 @@ def get_albums(user_id: str):
                 album["imageUrl"] = album.get("image_url", "")
     
     if not albums:
-        # User requested demo albums for display
+        # User requested demo albums for display, dynamically sync counts from DB
+        from db import get_all_posts
+        all_posts = get_all_posts()
+        phuket_count = len([p for p in all_posts if "普吉岛" in p.get("tags", []) and "演示" in p.get("tags", [])])
+        fitness_count = len([p for p in all_posts if "健身" in p.get("tags", []) and "演示" in p.get("tags", [])])
+        
         return {
             "albums": [
                 {
                     "id": "demo-phuket",
                     "album_id": "demo-phuket",
                     "title": "吉普岛旅游",
-                    "count": 13,
-                    "imageUrl": "https://images.unsplash.com/photo-1589394815804-964ed9be2eb3?w=800"
+                    "count": phuket_count if phuket_count > 0 else 13,
+                    "imageUrl": "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=800"
                 },
                 {
                     "id": "demo-fitness",
                     "album_id": "demo-fitness",
                     "title": "女性减脂健身",
-                    "count": 5,
+                    "count": fitness_count if fitness_count > 0 else 5,
                     "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800"
                 }
             ]
