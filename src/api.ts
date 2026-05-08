@@ -96,6 +96,54 @@ export const api = {
     return response.json();
   },
 
+  getAlbumPosts: async (albumId: string): Promise<Post[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/albums/${albumId}/posts`);
+      if (!response.ok) throw new Error('Failed to fetch album posts');
+      const data = await response.json();
+      return data.posts.map((p: any) => ({
+        id: p.post_id,
+        title: p.title,
+        imageUrl: p.image_urls?.[0] || '',
+        author: p.author || { name: '未知用户', avatar: '' },
+        likes: p.likes || '0',
+        description: p.raw_content
+      }));
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  },
+
+  getSavedPosts: async (): Promise<Post[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${CURRENT_USER_ID}/saved-posts`);
+      if (!response.ok) throw new Error('Failed to fetch saved posts');
+      const data = await response.json();
+      return data.posts.map((p: any) => ({
+        id: p.post_id,
+        title: p.title,
+        imageUrl: p.image_urls?.[0] || '',
+        author: p.author || { name: '未知用户', avatar: '' },
+        likes: p.likes || '0',
+        description: p.raw_content
+      }));
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  },
+
+  savePost: async (postId: string) => {
+    const response = await fetch(`${API_BASE_URL}/users/save-post`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: CURRENT_USER_ID, post_id: postId })
+    });
+    if (!response.ok) throw new Error('Failed to save post');
+    return response.json();
+  },
+
   // Working Set
   addToWorkingSet: async (post: Post) => {
     try {

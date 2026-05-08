@@ -69,6 +69,7 @@ export const SaveToAlbumSheet = ({ isOpen, onClose, albums, onSelectAlbum, onCre
             <div className="overflow-y-auto p-4 no-scrollbar">
               {/* Option: Just Collect */}
               <button 
+              <button 
                 onClick={() => { onSelectAlbum(null); onClose(); }}
                 className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors mb-4 group border border-dashed border-gray-200"
               >

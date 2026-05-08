@@ -127,14 +127,16 @@ export const PostDetail = ({ post, onBack, onOpenAI, onAddToRedAI }: PostDetailP
         albums={albums}
         onSelectAlbum={async (id) => {
           setIsSaved(true);
-          if (id) {
-            const { api } = await import('../api');
-            try {
+          const { api } = await import('../api');
+          try {
+            if (id) {
               await api.saveToAlbum(id, post.id);
-              loadAlbums();
-            } catch (e) {
-              console.error(e);
+            } else {
+              await api.savePost(post.id);
             }
+            loadAlbums();
+          } catch (e) {
+            console.error(e);
           }
         }}
         onCreateAlbum={async (title, desc) => {

@@ -11,6 +11,25 @@ interface AlbumDetailProps {
 }
 
 export const AlbumDetail = ({ album, onBack, onPostClick, isSelectionMode = false }: AlbumDetailProps) => {
+  const [posts, setPosts] = React.useState<Post[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const loadPosts = async () => {
+      setLoading(true);
+      try {
+        const { api } = await import('../api');
+        const albumPosts = await api.getAlbumPosts(album.id);
+        setPosts(albumPosts);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPosts();
+  }, [album.id]);
+
   return (
     <motion.div
       initial={{ x: '100%' }}
@@ -38,27 +57,38 @@ export const AlbumDetail = ({ album, onBack, onPostClick, isSelectionMode = fals
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-2">
-          {album.posts.map((post) => (
-            <div 
-              key={post.id} 
-              className="relative flex flex-col gap-2 cursor-pointer active:scale-95 transition-transform group"
-              onClick={() => onPostClick(post)}
-            >
-              <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                <img src={post.imageUrl} className="w-full h-full object-cover" alt={post.title} />
-                {isSelectionMode && (
-                  <div className="absolute top-2 right-2">
-                    <div className="w-6 h-6 rounded-full bg-red-600 border-2 border-white flex items-center justify-center shadow-md">
-                      <Check size={14} className="text-white font-bold" />
+        {loading ? (
+          <div className="flex justify-center p-10">
+            <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {posts.map((post) => (
+              <div 
+                key={post.id} 
+                className="relative flex flex-col gap-2 cursor-pointer active:scale-95 transition-transform group"
+                onClick={() => onPostClick(post)}
+              >
+                <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-gray-100">
+                  <img src={post.imageUrl} className="w-full h-full object-cover" alt={post.title} />
+                  {isSelectionMode && (
+                    <div className="absolute top-2 right-2">
+                      <div className="w-6 h-6 rounded-full bg-red-600 border-2 border-white flex items-center justify-center shadow-md">
+                        <Check size={14} className="text-white font-bold" />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+                <p className="text-xs font-bold text-gray-800 line-clamp-1 px-1">{post.title}</p>
               </div>
-              <p className="text-xs font-bold text-gray-800 line-clamp-1 px-1">{post.title}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+            {posts.length === 0 && (
+              <div className="col-span-2 py-20 text-center text-gray-300 text-xs">
+                专辑里还没有帖子哦
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Footer from mock - only show in selection mode or browse bottom if needed */}

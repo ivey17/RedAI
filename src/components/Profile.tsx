@@ -1,17 +1,26 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings, Share2, Plus, Zap, ChevronRight, Menu, X, MessageSquare, Sparkles, BookOpen, Bot, MousePointerClick, Sliders, ListFilter, ChevronDown } from 'lucide-react';
-import { Album } from '../types';
+import { Album, Post } from '../types';
 import { MOCK_ALBUMS } from '../constants';
 
-export const Profile = ({ onOpenAI, onAlbumClick, onOpenDeepDecision, onAlbumLongPress }: { 
+export const Profile = ({ onOpenAI, onAlbumClick, onPostClick, onOpenDeepDecision, onAlbumLongPress }: { 
   onOpenAI: () => void, 
   onAlbumClick: (album: Album, isSelectionMode: boolean) => void, 
+  onPostClick: (post: Post) => void,
   onOpenDeepDecision: () => void,
   onAlbumLongPress: (album: Album) => void
 }) => {
   const [activeInternalTab, setActiveInternalTab] = React.useState('RedAI');
   const [selectedPlan, setSelectedPlan] = React.useState<any>(null);
+  const [activeCollectionTab, setActiveCollectionTab] = React.useState<'posts' | 'albums'>('albums');
+  const [savedPosts, setSavedPosts] = React.useState<Post[]>([]);
+  const [userAlbums, setUserAlbums] = React.useState<Album[]>([]);
+  const [isLoadingCollections, setIsLoadingCollections] = React.useState(false);
+  const [isCreatingAlbum, setIsCreatingAlbum] = React.useState(false);
+  const [newAlbumTitle, setNewAlbumTitle] = React.useState('');
+  const [newAlbumDesc, setNewAlbumDesc] = React.useState('');
+  const [isSubmittingAlbum, setIsSubmittingAlbum] = React.useState(false);
   
   const [preferences, setPreferences] = React.useState([
     '预算偏好：精致穷', '风格偏好：极简主义',
@@ -22,6 +31,46 @@ export const Profile = ({ onOpenAI, onAlbumClick, onOpenDeepDecision, onAlbumLon
   const [isAnalyzingPreferences, setIsAnalyzingPreferences] = React.useState(false);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
   const isLongPress = React.useRef(false);
+
+  const loadCollections = async () => {
+    setIsLoadingCollections(true);
+    try {
+      const { api } = await import('../api');
+      const [posts, albums] = await Promise.all([
+        api.getSavedPosts(),
+        api.getAlbums()
+      ]);
+      setSavedPosts(posts);
+      setUserAlbums(albums);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingCollections(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeInternalTab === '收藏') {
+      loadCollections();
+    }
+  }, [activeInternalTab]);
+
+  const handleCreateAlbum = async () => {
+    if (!newAlbumTitle.trim() || isSubmittingAlbum) return;
+    setIsSubmittingAlbum(true);
+    try {
+      const { api } = await import('../api');
+      await api.createAlbum(newAlbumTitle, newAlbumDesc);
+      setIsCreatingAlbum(false);
+      setNewAlbumTitle('');
+      setNewAlbumDesc('');
+      await loadCollections();
+    } catch (err) {
+      alert('创建失败');
+    } finally {
+      setIsSubmittingAlbum(false);
+    }
+  };
 
   const startPress = (album: Album) => {
     isLongPress.current = false;
@@ -289,44 +338,103 @@ export const Profile = ({ onOpenAI, onAlbumClick, onOpenDeepDecision, onAlbumLon
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
-            className="space-y-4"
+            className="space-y-6"
           >
-            <div className="bg-red-50 p-3 rounded-xl flex items-center gap-3">
-              <div className="bg-red-500 p-1 rounded-full"><Zap size={14} className="text-white fill-current" /></div>
-              <p className="text-[10px] font-bold text-red-600">RedAI 将基于专辑内容为您生成深度风格趋势报告</p>
+            {/* Sub-tabs for Collections */}
+            <div className="flex gap-4 border-b border-gray-50">
+              <button 
+                onClick={() => setActiveCollectionTab('albums')}
+                className={`pb-2 text-sm font-bold transition-all px-2 ${activeCollectionTab === 'albums' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-400'}`}
+              >
+                专辑
+              </button>
+              <button 
+                onClick={() => setActiveCollectionTab('posts')}
+                className={`pb-2 text-sm font-bold transition-all px-2 ${activeCollectionTab === 'posts' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-400'}`}
+              >
+                帖子
+              </button>
             </div>
-            <div className="divide-y divide-gray-50">
-              {MOCK_ALBUMS.map((col, i) => (
-                <div 
-                  key={i} 
-                  className="flex justify-between items-center py-4 cursor-pointer active:bg-gray-50 transition-colors select-none" 
-                  onMouseDown={() => startPress(col)}
-                  onMouseUp={endPress}
-                  onMouseLeave={endPress}
-                  onTouchStart={() => startPress(col)}
-                  onTouchEnd={endPress}
-                  onClick={() => handleAlbumClickWithLongPress(col)}
-                >
-                  <div className="flex gap-4 items-center">
-                    <img src={col.imageUrl} className="w-14 h-14 rounded-xl object-cover border border-gray-100" alt="col" />
-                    <div>
-                      <h4 className="font-bold text-sm tracking-tight">{col.title}</h4>
-                      <p className="text-[10px] text-gray-400 mt-1">{col.count} 篇笔记</p>
+
+            {activeCollectionTab === 'albums' ? (
+              <div className="divide-y divide-gray-50">
+                {userAlbums.map((col, i) => (
+                  <div 
+                    key={col.id} 
+                    className="flex justify-between items-center py-4 cursor-pointer active:bg-gray-50 transition-colors select-none" 
+                    onMouseDown={() => startPress(col)}
+                    onMouseUp={endPress}
+                    onMouseLeave={endPress}
+                    onTouchStart={() => startPress(col)}
+                    onTouchEnd={endPress}
+                    onClick={() => handleAlbumClickWithLongPress(col)}
+                  >
+                    <div className="flex gap-4 items-center">
+                      <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden border border-gray-50 shadow-sm flex items-center justify-center">
+                        {col.imageUrl ? (
+                          <img src={col.imageUrl} className="w-full h-full object-cover" alt="col" />
+                        ) : (
+                          <Bookmark size={20} className="text-gray-300" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm tracking-tight">{col.title}</h4>
+                        <p className="text-[10px] text-gray-400 mt-1">{col.count} 篇笔记</p>
+                      </div>
                     </div>
+                    <ChevronRight size={18} className="text-gray-300" />
                   </div>
-                  <ChevronRight size={18} className="text-gray-300" />
+                ))}
+                
+                <div 
+                  onClick={() => setIsCreatingAlbum(true)}
+                  className="flex gap-4 items-center py-4 cursor-pointer active:scale-[0.98] transition-transform"
+                >
+                   <div className="w-14 h-14 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex items-center justify-center">
+                      <Plus size={24} className="text-gray-300" />
+                   </div>
+                   <div>
+                      <h4 className="font-bold text-sm text-red-500">新建收藏专辑</h4>
+                      <p className="text-[10px] text-gray-400 mt-1">整理更多灵感内容</p>
+                   </div>
                 </div>
-              ))}
-              <div className="flex gap-4 items-center py-4 cursor-pointer">
-                 <div className="w-14 h-14 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex items-center justify-center">
-                    <Plus size={24} className="text-gray-300" />
-                 </div>
-                 <div>
-                    <h4 className="font-bold text-sm text-red-500">新建收藏专辑</h4>
-                    <p className="text-[10px] text-gray-400 mt-1">整理更多灵感内容</p>
-                 </div>
+
+                {!isLoadingCollections && userAlbums.length === 0 && (
+                  <div className="py-20 text-center text-gray-300 text-xs">
+                    还没有创建过专辑哦
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {savedPosts.map((post) => (
+                  <div 
+                    key={post.id} 
+                    className="flex flex-col gap-2 cursor-pointer active:scale-95 transition-transform"
+                    onClick={() => onPostClick(post)}
+                  >
+                    <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-100 relative bg-gray-100">
+                      <img src={post.imageUrl} className="w-full h-full object-cover" alt={post.title} />
+                      <div className="absolute top-2 right-2 bg-black/20 backdrop-blur-md p-1 rounded-full">
+                         <Star size={10} className="text-white fill-current" />
+                      </div>
+                    </div>
+                    <h5 className="text-[11px] font-bold text-gray-800 line-clamp-1 px-1">{post.title}</h5>
+                  </div>
+                ))}
+                {!isLoadingCollections && savedPosts.length === 0 && (
+                  <div className="col-span-2 py-20 text-center text-gray-300 text-xs">
+                    暂无收藏的帖子
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {isLoadingCollections && (
+              <div className="flex justify-center p-10">
+                <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
           </motion.section>
         )}
 
@@ -441,6 +549,74 @@ export const Profile = ({ onOpenAI, onAlbumClick, onOpenDeepDecision, onAlbumLon
               </section>
             </main>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Create Album Modal */}
+      <AnimatePresence>
+        {isCreatingAlbum && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCreatingAlbum(false)}
+              className="fixed inset-0 z-[130] bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              className="fixed bottom-0 left-0 w-full bg-white rounded-t-[24px] z-[131] p-6 pb-safe space-y-6"
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold">新建收藏专辑</h3>
+                <button onClick={() => setIsCreatingAlbum(false)} className="p-1 text-gray-400">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="bg-red-50 p-4 rounded-xl flex items-center gap-3">
+                <div className="bg-red-500 p-1 rounded-full shrink-0">
+                  <Zap size={16} className="text-white fill-current" />
+                </div>
+                <p className="text-xs font-bold text-red-600 leading-tight">
+                  RedAI 将基于专辑内容为您生成深度风格趋势报告
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 px-1">专辑名称</label>
+                  <input 
+                    type="text" 
+                    value={newAlbumTitle}
+                    onChange={(e) => setNewAlbumTitle(e.target.value)}
+                    placeholder="例如：北欧家具灵感" 
+                    className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm focus:ring-2 focus:ring-red-100"
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-400 px-1">专辑描述（可选）</label>
+                  <textarea 
+                    value={newAlbumDesc}
+                    onChange={(e) => setNewAlbumDesc(e.target.value)}
+                    placeholder="输入一些描述，帮助 AI 更好地理解你的收藏意图..." 
+                    className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm focus:ring-2 focus:ring-red-100 h-24 resize-none"
+                  />
+                </div>
+              </div>
+
+              <button 
+                onClick={handleCreateAlbum}
+                disabled={!newAlbumTitle.trim() || isSubmittingAlbum}
+                className="w-full bg-red-600 text-white py-4 rounded-full font-bold shadow-lg shadow-red-100 active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                {isSubmittingAlbum ? '正在创建...' : '确认创建'}
+              </button>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

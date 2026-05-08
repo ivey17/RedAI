@@ -81,16 +81,35 @@ def create_album(req: AlbumCreateRequest):
     # Mock behavior if supabase isn't connected
     album_id = str(uuid.uuid4())
     img_url = req.image_url or "https://images.unsplash.com/photo-1516156008625-3a9d0450a1d1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"
-    album = create_user_album(req.user_id, req.title, img_url)
+    album = create_user_album(req.user_id, req.title, img_url, req.description)
     if not album:
-        album = {"id": album_id, "album_id": album_id, "title": req.title, "imageUrl": img_url, "count": 0}
+        album = {"id": album_id, "album_id": album_id, "title": req.title, "imageUrl": img_url, "count": 0, "description": req.description}
     return {"album": album}
 
 @app.post("/api/albums/add-post")
 def add_post_to_album_api(req: AlbumAddPostRequest):
     from db import add_post_to_album
     success = add_post_to_album(req.album_id, req.post_id)
-    return {"success": True}
+    return {"success": success}
+
+@app.get("/api/albums/{album_id}/posts")
+def get_album_posts_api(album_id: str):
+    from db import get_album_posts
+    posts = get_album_posts(album_id)
+    return {"posts": posts}
+
+@app.get("/api/users/{user_id}/saved-posts")
+def get_user_saved_posts_api(user_id: str):
+    from db import get_user_saved_posts
+    posts = get_user_saved_posts(user_id)
+    return {"posts": posts}
+
+from schemas import PostSaveRequest
+@app.post("/api/users/save-post")
+def save_user_post_api(req: PostSaveRequest):
+    from db import save_user_post
+    success = save_user_post(req.user_id, req.post_id)
+    return {"success": success}
 
 
 # --- Working Set APIs ---

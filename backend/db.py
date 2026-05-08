@@ -89,9 +89,9 @@ def get_user_albums(user_id: str):
     if not supabase_client: return []
     return supabase_client.select("albums", f"user_id=eq.{user_id}")
 
-def create_user_album(user_id: str, title: str, image_url: str):
+def create_user_album(user_id: str, title: str, image_url: str, description: str = ""):
     if not supabase_client: return None
-    data = {"user_id": user_id, "title": title, "imageUrl": image_url}
+    data = {"user_id": user_id, "title": title, "imageUrl": image_url, "description": description}
     # Supabase returns the inserted object
     resp = requests.post(f"{supabase_client.url}/rest/v1/albums", headers=supabase_client.headers, json=data)
     if resp.status_code in [200, 201]:
@@ -117,6 +117,32 @@ def add_post_to_album(album_id: str, post_id: str):
     # 2. 建立关联
     data = {"album_id": album_id, "post_id": post_id}
     return supabase_client.insert("album_posts", data)
+
+def get_album_posts(album_id: str):
+    if not supabase_client: return []
+    # 首先从 album_posts 获取关联关系
+    relations = supabase_client.select("album_posts", f"album_id=eq.{album_id}")
+    if not relations: return []
+    
+    post_ids = [r["post_id"] for r in relations]
+    return get_posts_by_ids(post_ids)
+
+def get_user_saved_posts(user_id: str):
+    if not supabase_client: return []
+    # 获取用户收藏的帖子关联
+    relations = supabase_client.select("saved_posts", f"user_id=eq.{user_id}")
+    if not relations: return []
+    
+    post_ids = [r["post_id"] for r in relations]
+    return get_posts_by_ids(post_ids)
+
+def save_user_post(user_id: str, post_id: str):
+    if not supabase_client: return False
+    # 检查是否已收藏
+    existing = supabase_client.select("saved_posts", f"user_id=eq.{user_id}&post_id=eq.{post_id}")
+    if existing: return True
+    
+    return supabase_client.insert("saved_posts", {"user_id": user_id, "post_id": post_id})
 
 # --- MOCK FALLBACKS ---
 MOCK_POSTS_STORE = {

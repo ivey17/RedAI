@@ -187,6 +187,7 @@ export default function App() {
               <Profile 
                 onOpenAI={handleOpenAI} 
                 onAlbumClick={handleAlbumClick} 
+                onPostClick={handlePostClick}
                 onOpenDeepDecision={() => setIsDecisionEngineOpen(true)} 
                 onAlbumLongPress={handleAlbumLongPress}
               />

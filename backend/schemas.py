@@ -56,3 +56,7 @@ class AlbumAddPostRequest(BaseModel):
 class PreferenceExtractRequest(BaseModel):
     text: str
     user_id: Optional[str] = None
+
+class PostSaveRequest(BaseModel):
+    user_id: str
+    post_id: str
