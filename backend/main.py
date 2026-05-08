@@ -23,7 +23,7 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "RedAI Backend is running!"}
+    return {"message": "RedAI Backend v1.1 is running!"}
 
 @app.get("/api/debug-db")
 def debug_db():
