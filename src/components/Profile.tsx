@@ -474,14 +474,30 @@ export const Profile = ({ onOpenAI, onAlbumClick, onOpenDeepDecision, onAlbumLon
                     className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-red-100 h-32 resize-none placeholder:text-gray-400"
                   />
                   <button 
-                    onClick={() => {
+                    onClick={async () => {
                       if (!preferenceInput.trim()) return;
                       setIsAnalyzingPreferences(true);
-                      setTimeout(() => {
-                        setPreferences(prev => [...prev, '饮品偏好：咖啡星人', '休闲活动：周末露营', '兴趣圈层：数码极客']);
-                        setPreferenceInput('');
+                      try {
+                        const { api } = await import('../api');
+                        const result = await api.extractPreferences(preferenceInput);
+                        if (result.success && result.tags.length > 0) {
+                          // Filter out duplicates
+                          setPreferences(prev => {
+                            const newTags = result.tags.filter((tag: string) => !prev.includes(tag));
+                            return [...prev, ...newTags];
+                          });
+                          setPreferenceInput('');
+                          // If there's a suggestion even with success, maybe show it?
+                        } else {
+                          // Show suggestion/error
+                          alert(result.suggestion || result.message || "没能提取到标签，请试着描述更详细一点？");
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        alert("提取失败，请稍后再试");
+                      } finally {
                         setIsAnalyzingPreferences(false);
-                      }, 1500);
+                      }
                     }}
                     disabled={isAnalyzingPreferences || !preferenceInput.trim()}
                     className="absolute bottom-3 right-3 bg-red-500 text-white px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 transition-all disabled:opacity-50"
@@ -499,7 +515,11 @@ export const Profile = ({ onOpenAI, onAlbumClick, onOpenDeepDecision, onAlbumLon
                     )}
                   </button>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-2 px-1">AI 将自动识别你的输入并将其分类为结构化的偏好标签</p>
+                <p className="text-[10px] text-gray-400 mt-2 px-1">
+                   AI 将自动识别你的输入并将其分类为结构化的偏好标签。
+                   <br/>
+                   <span className="text-red-400/80 italic">提示：描述越详细（如具体品牌、风格、预算），提取越精准。</span>
+                </p>
               </div>
 
               <div>

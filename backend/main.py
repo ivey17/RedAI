@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from schemas import (
     WorkingSetAddRequest, WorkingSetUpdateRequest, 
     WorkingSetRemoveRequest, WorkingSetClearRequest, 
-    AIChatRequest, Post
+    AIChatRequest, Post, PreferenceExtractRequest
 )
 from db import redis_client, save_temp_post, get_posts_by_ids
 from prompt_builder import build_decision_prompt
@@ -184,6 +184,51 @@ def ai_chat(req: AIChatRequest):
         "session_id": session_id,
         "result": result
     }
+
+@app.post("/api/ai/extract-preferences")
+def extract_preferences(req: PreferenceExtractRequest):
+    if not req.text or len(req.text.strip()) < 5:
+        return {
+            "success": False, 
+            "message": "描述太简略啦，试着多说一点你的喜好（比如喜欢的风格、品牌或具体要求）？",
+            "tags": []
+        }
+    
+    sys_prompt = """你是一个专业的标签提取助手。你的任务是从用户的个人描述中提取“偏好标签”。
+    
+    【输出要求】
+    1. 必须以 JSON 格式输出。
+    2. 如果可以提取出标签，输出格式为：{"tags": ["维度：关键词", ...], "suggestion": ""}
+    3. 如果内容过于模糊、无意义或无法提取出有效的偏好，输出格式为：{"tags": [], "suggestion": "提示词：您可以试试描述喜欢的风格（如：法式复古）、消费观（如：极致性价比）或特定需求。"}
+    4. 标签维度参考：预算偏好、风格偏好、美食倾向、护肤成分、兴趣圈层等。
+    5. 标签必须简洁，每个标签不超过 10 个字。
+    
+    请直接返回 JSON，不要包含任何 Markdown 格式。"""
+    
+    user_prompt = f"用户描述：{req.text}"
+    
+    try:
+        raw_result = generate_decision(sys_prompt, user_prompt)
+        # 尝试清理可能的 markdown 标记
+        json_str = raw_result.replace("```json", "").replace("```", "").strip()
+        import json
+        data = json.loads(json_str)
+        
+        if not data.get("tags") and not data.get("suggestion"):
+            data["suggestion"] = "暂时没能提取到有效标签，请更详细地描述一下吧！"
+            
+        return {
+            "success": len(data.get("tags", [])) > 0,
+            "tags": data.get("tags", []),
+            "suggestion": data.get("suggestion", "")
+        }
+    except Exception as e:
+        print(f"Extraction error: {e}")
+        return {
+            "success": False,
+            "message": "AI 提取失败，请尝试换种描述方式。",
+            "tags": []
+        }
 
 if __name__ == "__main__":
     import uvicorn

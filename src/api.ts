@@ -179,5 +179,20 @@ export const api = {
       console.error(e);
       throw e;
     }
+  },
+
+  extractPreferences: async (text: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/extract-preferences`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, user_id: CURRENT_USER_ID })
+      });
+      if (!response.ok) throw new Error('Extraction failed');
+      return await response.json();
+    } catch (e: any) {
+      console.error(e);
+      throw e;
+    }
   }
 };

@@ -52,3 +52,7 @@ class AlbumCreateRequest(BaseModel):
 class AlbumAddPostRequest(BaseModel):
     album_id: str
     post_id: str
+
+class PreferenceExtractRequest(BaseModel):
+    text: str
+    user_id: Optional[str] = None
