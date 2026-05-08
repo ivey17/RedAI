@@ -1,6 +1,6 @@
 import { Post, Album } from './types';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 let CURRENT_USER_ID = localStorage.getItem('redai_current_user') || 'test-user-1';
 
