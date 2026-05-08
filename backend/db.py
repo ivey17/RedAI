@@ -107,6 +107,13 @@ def create_user_album(user_id: str, title: str, image_url: str, description: str
         url = f"{base_url}/albums"
         resp = requests.post(url, headers=supabase_client.headers, json=data)
         
+        if resp.status_code == 400 and "description" in resp.text:
+            # Fallback: table doesn't have description column
+            print("Fallback: Creating album without description column...")
+            data_copy = data.copy()
+            del data_copy["description"]
+            resp = requests.post(url, headers=supabase_client.headers, json=data_copy)
+
         if resp.status_code in [200, 201]:
             result = resp.json()
             if isinstance(result, list) and len(result) > 0:

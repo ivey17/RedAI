@@ -266,15 +266,16 @@ def extract_preferences(req: PreferenceExtractRequest):
 
 @app.get("/api/debug-db")
 def debug_db():
-    from db import supabase_client, get_all_posts
+    from db import supabase_client, get_all_posts, get_user_albums
     import os
     posts = get_all_posts()
+    albums = get_user_albums("test-user-1")
     return {
         "supabase_url_env": os.environ.get("SUPABASE_URL"),
         "supabase_client_exists": supabase_client is not None,
-        "supabase_url_client": supabase_client.url if supabase_client else None,
         "posts_count": len(posts),
-        "mock_size": 2 # Assuming starter-1 and starter-2
+        "albums_sample": albums[:2] if albums else [],
+        "mock_size": 2 
     }
 
 @app.post("/api/ai/extract-decision-params")
