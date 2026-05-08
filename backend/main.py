@@ -60,15 +60,22 @@ def get_albums(user_id: str):
                 album["imageUrl"] = album.get("image_url", "")
     
     if not albums:
-        # fallback
+        # User requested demo albums for display
         return {
             "albums": [
                 {
-                    "id": "a1",
-                    "album_id": "a1",
-                    "title": "默认专辑",
-                    "count": 0,
-                    "imageUrl": ""
+                    "id": "demo-phuket",
+                    "album_id": "demo-phuket",
+                    "title": "吉普岛旅游",
+                    "count": 13,
+                    "imageUrl": "https://images.unsplash.com/photo-1589394815804-964ed9be2eb3?w=800"
+                },
+                {
+                    "id": "demo-fitness",
+                    "album_id": "demo-fitness",
+                    "title": "女性减脂健身",
+                    "count": 5,
+                    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800"
                 }
             ]
         }
@@ -109,7 +116,15 @@ def add_post_to_album_api(req: AlbumAddPostRequest):
 
 @app.get("/api/albums/{album_id}/posts")
 def get_album_posts_api(album_id: str):
-    from db import get_album_posts
+    from db import get_album_posts, get_all_posts
+    
+    # Intercept demo albums and fetch real seeded posts via tags
+    if album_id in ["demo-phuket", "demo-fitness"]:
+        all_posts = get_all_posts()
+        target_tag = "普吉岛" if album_id == "demo-phuket" else "健身"
+        demo_posts = [p for p in all_posts if target_tag in p.get("tags", []) and "演示" in p.get("tags", [])]
+        return {"posts": demo_posts}
+        
     posts = get_album_posts(album_id)
     return {"posts": posts}
 
