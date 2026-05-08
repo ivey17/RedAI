@@ -21,11 +21,20 @@ class SupabaseREST:
 
     def select(self, table, filters=None):
         try:
-            url = f"{self.url}/rest/v1/{table}?select=*"
+            # Ensure URL doesn't have double /rest/v1/
+            base_url = self.url.rstrip('/')
+            if not base_url.endswith('/rest/v1'):
+                base_url = f"{base_url}/rest/v1"
+            
+            url = f"{base_url}/{table}?select=*"
             if filters:
                 url += f"&{filters}"
+            
             resp = requests.get(url, headers=self.headers)
-            return resp.json() if resp.status_code == 200 else []
+            if resp.status_code == 200:
+                return resp.json()
+            print(f"Select failed with status {resp.status_code}: {resp.text}")
+            return []
         except Exception as e:
             print(f"Select error: {e}")
             return []
@@ -110,16 +119,37 @@ def add_post_to_album(album_id: str, post_id: str):
     return supabase_client.insert("album_posts", data)
 
 # --- MOCK FALLBACKS ---
-MOCK_POSTS_STORE = {}
+MOCK_POSTS_STORE = {
+    "starter-1": {
+        "post_id": "starter-1",
+        "title": "欢迎来到 RedAI！",
+        "raw_content": "这是一个基于 AI 的深度决策小红书工具。你可以将喜欢的帖子加入分析组，让 AI 帮你做决定。目前你看到的这些是保底数据，请配置 Supabase 环境变量以同步真实数据。",
+        "image_urls": ["https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80"],
+        "author": {"username": "RedAI 助手", "avatar": ""},
+        "likes": "999"
+    },
+    "starter-2": {
+        "post_id": "starter-2",
+        "title": "如何使用 AI 提取偏好？",
+        "raw_content": "在个人中心点击“修改偏好”，输入你的喜好描述，AI 会自动为你生成结构化标签。例如输入“我喜欢法式风格，看重性价比”，AI 会提取出风格和预算维度的标签。",
+        "image_urls": ["https://images.unsplash.com/photo-1675557009875-436f599393e0?w=800&q=80"],
+        "author": {"username": "RedAI 教程", "avatar": ""},
+        "likes": "666"
+    }
+}
+
 def save_temp_post(post_data: dict):
     if supabase_client: return supabase_client.insert("posts", post_data)
     MOCK_POSTS_STORE[post_data["post_id"]] = post_data
     return True
 
 def get_all_posts():
+    db_posts = []
     if supabase_client:
-        posts = supabase_client.select("posts")
-        if posts: return posts
+        db_posts = supabase_client.select("posts")
+    
+    if db_posts:
+        return db_posts
     return list(MOCK_POSTS_STORE.values())
 
 def get_posts_by_ids(post_ids: list):
