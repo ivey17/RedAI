@@ -80,49 +80,52 @@ export const PostDetail = ({ post, onBack, onOpenAI, onAddToRedAI }: PostDetailP
         </div>
       </article>
 
-      {/* Bottom Action Bar - Redesigned */}
-      <footer className="fixed bottom-0 left-0 w-full bg-white z-[90] border-t border-gray-100 px-4 h-16 flex items-center gap-3 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
+      {/* Bottom Action Bar - Optimized for Mobile Responsiveness */}
+      <footer className="fixed bottom-0 left-0 w-full bg-white z-[90] border-t border-gray-100 px-2 h-16 flex items-center justify-between gap-1 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
         {/* Left: Fake Input */}
-        <div className="flex-1 bg-gray-100 h-10 rounded-full px-4 flex items-center gap-2 text-gray-400 cursor-pointer hover:bg-gray-200 transition-colors">
-          <Edit3 size={16} />
-          <span className="text-xs">说点什么...</span>
+        <div className="flex-1 min-w-[60px] bg-gray-100 h-10 rounded-full px-3 flex items-center gap-1.5 text-gray-400 cursor-pointer hover:bg-gray-200 transition-colors">
+          <Edit3 size={14} className="shrink-0" />
+          <span className="text-[11px] truncate">说点什么...</span>
         </div>
-
-        {/* Right: Icons & RedAI */}
-        <div className="flex items-center gap-5 px-1 shrink-0">
-          <div className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform">
-            <Heart size={20} className="text-gray-800 group-hover:text-red-500 transition-colors" />
-            <span className="text-[10px] text-gray-500 font-medium">{post.likes || '39'}</span>
-          </div>
-
-          <div
-            onClick={() => setIsSaveSheetOpen(true)}
-            className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform"
-          >
-            <Star size={20} className={`text-gray-800 ${isSaved ? 'text-yellow-500 fill-yellow-500' : 'group-hover:text-yellow-500'} transition-colors`} />
-            <span className="text-[10px] text-gray-500 font-medium">{isSaved ? '10' : '9'}</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform">
-            <MessageCircle size={20} className="text-gray-800 group-hover:text-blue-500 transition-colors" />
-            <span className="text-[10px] text-gray-500 font-medium">32</span>
-          </div>
-
-          {/* RedAI Entry Point - More prominent */}
-          <div className="flex items-center gap-3 ml-1 pl-4 border-l border-gray-100">
-            <button
-              onClick={() => onAddToRedAI(post)}
-              className="text-red-600 font-black text-[10px] px-2 py-1 rounded-md hover:bg-red-50 transition-colors whitespace-nowrap"
+        
+        {/* Right Action Group */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Interaction Icons */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform">
+              <Heart size={18} className="text-gray-800 group-hover:text-red-500 transition-colors" />
+              <span className="text-[9px] text-gray-500 font-medium">{post.likes || '39'}</span>
+            </div>
+            
+            <div 
+              onClick={() => setIsSaveSheetOpen(true)}
+              className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform"
             >
-              加入REDAI分析帖组
-            </button>
-            <button
-              onClick={onOpenAI}
-              className="bg-red-600 text-white px-5 py-2 rounded-full text-xs font-black shadow-lg shadow-red-100 active:scale-95 transition-all flex items-center gap-1.5"
-            >
-              <Zap size={14} fill="currentColor" />
-              <span>分析</span>
-            </button>
+              <Star size={18} className={`text-gray-800 ${isSaved ? 'text-yellow-500 fill-yellow-500' : 'group-hover:text-yellow-500'} transition-colors`} />
+              <span className="text-[9px] text-gray-500 font-medium">{isSaved ? '10' : '9'}</span>
+            </div>
+            
+            <div className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform">
+              <MessageCircle size={18} className="text-gray-800 group-hover:text-blue-500 transition-colors" />
+              <span className="text-[9px] text-gray-500 font-medium">32</span>
+            </div>
+          </div>
+
+          {/* RedAI Buttons */}
+          <div className="flex items-center gap-1.5 ml-0.5 pl-2 border-l border-gray-100">
+             <button 
+               onClick={() => onAddToRedAI(post)}
+               className="text-red-600 font-bold text-[9px] px-1 py-1 rounded-md hover:bg-red-50 transition-colors whitespace-nowrap"
+             >
+               加入分析帖组
+             </button>
+             <button 
+               onClick={onOpenAI}
+               className="bg-red-600 text-white px-3.5 py-2 rounded-full text-xs font-black shadow-lg shadow-red-100 active:scale-95 transition-all flex items-center gap-1"
+             >
+               <Zap size={12} fill="currentColor" />
+               <span>分析</span>
+             </button>
           </div>
         </div>
       </footer>
