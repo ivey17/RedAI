@@ -53,8 +53,8 @@ export const PostDetail = ({ post, onBack, onOpenAI, onAddToRedAI }: PostDetailP
       </nav>
 
       {/* Hero Image */}
-      <div className="relative w-full aspect-[3/4] bg-gray-100">
-        <img src={post.imageUrl} className="w-full h-full object-cover" alt="main" />
+      <div className="relative w-full bg-gray-100 flex items-center justify-center min-h-[300px]">
+        <img src={post.imageUrl} className="w-full h-auto max-h-[70vh] object-contain" alt="main" />
         <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-medium">
           1/1
         </div>
