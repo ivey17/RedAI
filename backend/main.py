@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from schemas import (
     WorkingSetAddRequest, WorkingSetUpdateRequest, 
     WorkingSetRemoveRequest, WorkingSetClearRequest, 
-    AIChatRequest, Post, PreferenceExtractRequest
+    AIChatRequest, Post, PreferenceExtractRequest,
+    AlbumCreateRequest, AlbumAddPostRequest, PostSaveRequest,
+    DecisionParamRequest
 )
 from db import redis_client, save_temp_post, get_posts_by_ids
 from prompt_builder import build_decision_prompt
