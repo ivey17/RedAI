@@ -16,6 +16,7 @@ import { AlbumDetail } from './components/AlbumDetail';
 import { RedAIDecisionEngine } from './components/RedAIDecisionEngine';
 import { AlbumActionSheet } from './components/AlbumActionSheet';
 import { WorkingSetSheet } from './components/WorkingSetSheet';
+import { AlbumPostSelectorSheet } from './components/AlbumPostSelectorSheet';
 import { LoginPage } from './components/LoginPage';
 import { Sparkles, Brain, CheckCircle, Users, MessageSquare } from 'lucide-react';
 import { api } from './api';
@@ -33,6 +34,8 @@ export default function App() {
   const [isAlbumActionSheetOpen, setIsAlbumActionSheetOpen] = useState(false);
   const [isWorkingSetSheetOpen, setIsWorkingSetSheetOpen] = useState(false);
   const [actionSheetAlbum, setActionSheetAlbum] = useState<Album | null>(null);
+  const [isAlbumSelectorSheetOpen, setIsAlbumSelectorSheetOpen] = useState(false);
+  const [albumSelectorPosts, setAlbumSelectorPosts] = useState<Post[]>([]);
   const [redAICount, setRedAICount] = useState(0);
   const [workingSetPosts, setWorkingSetPosts] = useState<Post[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -82,12 +85,25 @@ export default function App() {
     setIsAlbumActionSheetOpen(true);
   };
 
-  const handleAlbumRedAIDecision = (album: Album) => {
-    if (album.posts.length <= 10) {
-      setIsDecisionEngineOpen(true);
-    } else {
-      setSelectedAlbum(album);
-      setAlbumSelectionMode(true);
+  const handleAlbumRedAIDecision = async (album: Album) => {
+    try {
+      // 获取真实的帖子列表，因为 album 对象中只有 count
+      const albumPosts = await api.getAlbumPosts(album.id);
+      
+      if (album.count <= 10) {
+        // 直接替换当前贴组
+        setWorkingSetPosts(albumPosts);
+        setRedAICount(albumPosts.length);
+        setIsDecisionEngineOpen(true);
+      } else {
+        // 弹出半屏选择器
+        setAlbumSelectorPosts(albumPosts);
+        setActionSheetAlbum(album);
+        setIsAlbumSelectorSheetOpen(true);
+      }
+    } catch (err) {
+      console.error('Failed to load album posts for decision engine', err);
+      alert('加载专辑内容失败，请重试');
     }
   };
 
@@ -261,6 +277,19 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      <AlbumPostSelectorSheet 
+        isOpen={isAlbumSelectorSheetOpen}
+        onClose={() => setIsAlbumSelectorSheetOpen(false)}
+        album={actionSheetAlbum}
+        posts={albumSelectorPosts}
+        onConfirm={(selectedPosts) => {
+          setIsAlbumSelectorSheetOpen(false);
+          setWorkingSetPosts(selectedPosts);
+          setRedAICount(selectedPosts.length);
+          setIsDecisionEngineOpen(true);
+        }}
+      />
 
       <AlbumActionSheet 
         isOpen={isAlbumActionSheetOpen}
