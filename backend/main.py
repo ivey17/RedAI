@@ -25,6 +25,18 @@ app.add_middleware(
 def read_root():
     return {"message": "RedAI Backend is running!"}
 
+@app.get("/api/debug-db")
+def debug_db():
+    from db import supabase_client, MOCK_POSTS_STORE, get_all_posts
+    import os
+    return {
+        "supabase_url": os.environ.get("SUPABASE_URL"),
+        "has_key": bool(os.environ.get("SUPABASE_KEY")),
+        "client_exists": supabase_client is not None,
+        "mock_size": len(MOCK_POSTS_STORE),
+        "posts_count": len(get_all_posts())
+    }
+
 # --- Feed & Album APIs ---
 @app.get("/api/posts")
 def get_feed_posts():
