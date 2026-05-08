@@ -84,50 +84,50 @@ export const PostDetail = ({ post, onBack, onOpenAI, onAddToRedAI }: PostDetailP
       <footer className="fixed bottom-0 left-0 w-full bg-white z-[90] border-t border-gray-100 px-4 h-16 flex items-center gap-3 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
         {/* Left: Fake Input */}
         <div className="flex-1 bg-gray-100 h-10 rounded-full px-4 flex items-center gap-2 text-gray-400 cursor-pointer hover:bg-gray-200 transition-colors">
-           <Edit3 size={16} />
-           <span className="text-xs">说点什么...</span>
+          <Edit3 size={16} />
+          <span className="text-xs">说点什么...</span>
         </div>
-        
+
         {/* Right: Icons & RedAI */}
         <div className="flex items-center gap-5 px-1 shrink-0">
-           <div className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform">
-             <Heart size={20} className="text-gray-800 group-hover:text-red-500 transition-colors" />
-             <span className="text-[10px] text-gray-500 font-medium">{post.likes || '39'}</span>
-           </div>
-           
-           <div 
-             onClick={() => setIsSaveSheetOpen(true)}
-             className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform"
-           >
-             <Star size={20} className={`text-gray-800 ${isSaved ? 'text-yellow-500 fill-yellow-500' : 'group-hover:text-yellow-500'} transition-colors`} />
-             <span className="text-[10px] text-gray-500 font-medium">{isSaved ? '10' : '9'}</span>
-           </div>
-           
-           <div className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform">
-             <MessageCircle size={20} className="text-gray-800 group-hover:text-blue-500 transition-colors" />
-             <span className="text-[10px] text-gray-500 font-medium">32</span>
-           </div>
+          <div className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform">
+            <Heart size={20} className="text-gray-800 group-hover:text-red-500 transition-colors" />
+            <span className="text-[10px] text-gray-500 font-medium">{post.likes || '39'}</span>
+          </div>
 
-           {/* RedAI Entry Point - More prominent */}
-           <div className="flex items-center gap-3 ml-1 pl-4 border-l border-gray-100">
-              <button 
-                onClick={() => onAddToRedAI(post)}
-                className="text-red-600 font-black text-[10px] px-2 py-1 rounded-md hover:bg-red-50 transition-colors whitespace-nowrap"
-              >
-                加入REDAI分析帖组
-              </button>
-              <button 
-                onClick={onOpenAI}
-                className="bg-red-600 text-white px-5 py-2 rounded-full text-xs font-black shadow-lg shadow-red-100 active:scale-95 transition-all flex items-center gap-1.5"
-              >
-                <Zap size={14} fill="currentColor" />
-                <span>分析</span>
-              </button>
-           </div>
+          <div
+            onClick={() => setIsSaveSheetOpen(true)}
+            className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform"
+          >
+            <Star size={20} className={`text-gray-800 ${isSaved ? 'text-yellow-500 fill-yellow-500' : 'group-hover:text-yellow-500'} transition-colors`} />
+            <span className="text-[10px] text-gray-500 font-medium">{isSaved ? '10' : '9'}</span>
+          </div>
+
+          <div className="flex flex-col items-center gap-0.5 group cursor-pointer active:scale-90 transition-transform">
+            <MessageCircle size={20} className="text-gray-800 group-hover:text-blue-500 transition-colors" />
+            <span className="text-[10px] text-gray-500 font-medium">32</span>
+          </div>
+
+          {/* RedAI Entry Point - More prominent */}
+          <div className="flex items-center gap-3 ml-1 pl-4 border-l border-gray-100">
+            <button
+              onClick={() => onAddToRedAI(post)}
+              className="text-red-600 font-black text-[10px] px-2 py-1 rounded-md hover:bg-red-50 transition-colors whitespace-nowrap"
+            >
+              加入REDAI分析帖组
+            </button>
+            <button
+              onClick={onOpenAI}
+              className="bg-red-600 text-white px-5 py-2 rounded-full text-xs font-black shadow-lg shadow-red-100 active:scale-95 transition-all flex items-center gap-1.5"
+            >
+              <Zap size={14} fill="currentColor" />
+              <span>分析</span>
+            </button>
+          </div>
         </div>
       </footer>
 
-      <SaveToAlbumSheet 
+      <SaveToAlbumSheet
         isOpen={isSaveSheetOpen}
         onClose={() => setIsSaveSheetOpen(false)}
         albums={albums}
