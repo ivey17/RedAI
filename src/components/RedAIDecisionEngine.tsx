@@ -72,6 +72,7 @@ export const RedAIDecisionEngine = ({ onBack, posts, onRemove, onPostClick, onAd
           const finalPrompt = `我的目标是：${goal}。我的条件是：${conditions.join(', ')}。请给我：${finalFormat}。`;
           const chatRes = await api.chat(posts.map(p => p.id), finalPrompt);
           setAiResult(chatRes.result);
+          setSuggestion(null); // Clear the "Generating..." message so result shows
         } else {
           setSuggestion(res.suggestion || res.message || "请告诉我你想要的输出格式。");
         }
@@ -261,13 +262,22 @@ export const RedAIDecisionEngine = ({ onBack, posts, onRemove, onPostClick, onAd
               </div>
               <div className="flex-1 space-y-4">
                 {chatLoading ? (
-                  <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <div className="space-y-4">
+                    {suggestion && (
+                      <div className="bg-red-50 p-4 rounded-2xl rounded-tl-none shadow-sm border border-red-100">
+                        <p className="text-xs font-bold text-red-600 leading-relaxed italic animate-pulse">
+                          {suggestion}
+                        </p>
+                      </div>
+                    )}
+                    <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      </div>
+                      <span className="text-[11px] text-gray-400">正在分析数据并撰写报告...</span>
                     </div>
-                    <span className="text-[11px] text-gray-400">正在分析...</span>
                   </div>
                 ) : suggestion ? (
                   <motion.div 
