@@ -101,7 +101,11 @@ export const AlbumPostSelectorSheet = ({ isOpen, onClose, album, posts, onConfir
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-lg">选择要分析的帖子</h3>
-                  <p className="text-xs text-red-500/80 font-medium">{album?.title} · 已选 {selectedIds.length} / 10</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs text-gray-400 font-medium">{album?.title}</p>
+                    <div className="w-1 h-1 bg-gray-300 rounded-full" />
+                    <p className="text-xs text-red-500 font-bold">已选 {selectedIds.length} / 10</p>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
