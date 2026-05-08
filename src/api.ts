@@ -50,7 +50,7 @@ export const api = {
       const response = await fetch(`${API_BASE_URL}/albums?user_id=${CURRENT_USER_ID}`);
       if (!response.ok) throw new Error('Failed to fetch albums');
       const data = await response.json();
-      return data.albums.map((a: any) => ({
+      return (data.albums || []).map((a: any) => ({
         id: a.album_id || a.id,
         title: a.title,
         count: a.count || 0,

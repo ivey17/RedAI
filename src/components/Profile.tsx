@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, Share2, Plus, Zap, ChevronRight, Menu, X, MessageSquare, Sparkles, BookOpen, Bot, MousePointerClick, Sliders, ListFilter, ChevronDown } from 'lucide-react';
+import { Settings, Share2, Plus, Zap, ChevronRight, Menu, X, MessageSquare, Sparkles, BookOpen, Bot, MousePointerClick, Sliders, ListFilter, ChevronDown, Bookmark, Star } from 'lucide-react';
 import { Album, Post } from '../types';
 import { MOCK_ALBUMS } from '../constants';
 
