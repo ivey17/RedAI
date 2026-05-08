@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings, Share2, Plus, Zap, ChevronRight, Menu, X, MessageSquare, Sparkles, BookOpen, Bot, MousePointerClick, Sliders, ListFilter, ChevronDown, Bookmark, Star } from 'lucide-react';
 import { Album, Post } from '../types';
 import { MOCK_ALBUMS } from '../constants';
+import { api } from '../api';
 
 export const Profile = ({ onOpenAI, onAlbumClick, onPostClick, onOpenDeepDecision, onAlbumLongPress }: { 
   onOpenAI: () => void, 
@@ -35,7 +36,6 @@ export const Profile = ({ onOpenAI, onAlbumClick, onPostClick, onOpenDeepDecisio
   const loadCollections = async () => {
     setIsLoadingCollections(true);
     try {
-      const { api } = await import('../api');
       const [posts, albums] = await Promise.all([
         api.getSavedPosts(),
         api.getAlbums()
@@ -59,7 +59,6 @@ export const Profile = ({ onOpenAI, onAlbumClick, onPostClick, onOpenDeepDecisio
     if (!newAlbumTitle.trim() || isSubmittingAlbum) return;
     setIsSubmittingAlbum(true);
     try {
-      const { api } = await import('../api');
       await api.createAlbum(newAlbumTitle, newAlbumDesc);
       setIsCreatingAlbum(false);
       setNewAlbumTitle('');
@@ -131,15 +130,15 @@ export const Profile = ({ onOpenAI, onAlbumClick, onPostClick, onOpenDeepDecisio
 
       <div className="flex gap-8 border-b border-gray-100 pb-4">
         <div className="text-center">
-          <p className="font-bold text-lg">12</p>
+          <p className="font-bold text-lg">0</p>
           <p className="text-xs text-gray-400">笔记</p>
         </div>
         <div className="text-center">
-          <p className="font-bold text-lg">86</p>
+          <p className="font-bold text-lg">{savedPosts.length}</p>
           <p className="text-xs text-gray-400">收藏</p>
         </div>
         <div className="text-center">
-          <p className="font-bold text-lg">124</p>
+          <p className="font-bold text-lg">0</p>
           <p className="text-xs text-gray-400">赞过</p>
         </div>
       </div>
@@ -654,7 +653,6 @@ export const Profile = ({ onOpenAI, onAlbumClick, onPostClick, onOpenDeepDecisio
                       if (!preferenceInput.trim()) return;
                       setIsAnalyzingPreferences(true);
                       try {
-                        const { api } = await import('../api');
                         const result = await api.extractPreferences(preferenceInput);
                         if (result.success && result.tags.length > 0) {
                           // Filter out duplicates

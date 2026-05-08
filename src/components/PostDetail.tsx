@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Share, Heart, MessageCircle, Star, Plus, Zap, Edit3 } from 'lucide-react';
 import { Post, Album } from '../types';
 import { SaveToAlbumSheet } from './SaveToAlbumSheet';
+import { api } from '../api';
 
 interface PostDetailProps {
   post: Post;
@@ -12,19 +13,24 @@ interface PostDetailProps {
 }
 
 export const PostDetail = ({ post, onBack, onOpenAI, onAddToRedAI }: PostDetailProps) => {
-  const [isSaveSheetOpen, setIsSaveSheetOpen] = React.useState(false);
-  const [albums, setAlbums] = React.useState<Album[]>([]);
-  const [isSaved, setIsSaved] = React.useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaveSheetOpen, setIsSaveSheetOpen] = useState(false);
+  const [albums, setAlbums] = useState<Album[]>([]);
 
-  const loadAlbums = () => {
-    import('../api').then(({ api }) => {
-      api.getAlbums().then(setAlbums);
-    });
+  const loadAlbums = async () => {
+    const data = await api.getAlbums();
+    setAlbums(data);
   };
 
   React.useEffect(() => {
     loadAlbums();
-  }, []);
+    // Check real saved status
+    const checkSaved = async () => {
+      const saved = await api.isPostSaved(post.id);
+      setIsSaved(saved);
+    };
+    checkSaved();
+  }, [post.id]);
 
   return (
     <motion.div

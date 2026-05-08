@@ -97,48 +97,34 @@ def get_user_albums(user_id: str):
 def create_user_album(user_id: str, title: str, image_url: str, description: str = ""):
     if not supabase_client: return None
     try:
-        data = {"user_id": user_id, "title": title, "imageUrl": image_url, "description": description}
+        data = {
+            "user_id": user_id, 
+            "title": title, 
+            "imageUrl": image_url or "", 
+            "description": description or ""
+        }
         
-        # Robust URL building
-        base_url = supabase_client.url.rstrip('/')
-        if not base_url.endswith('/rest/v1'):
-            base_url = f"{base_url}/rest/v1"
+        # Use standard insert which uses Prefer: return=representation
+        url = supabase_client._get_url("albums")
+        resp = requests.post(url, headers=supabase_client.headers, json=data)
+        
+        if resp.status_code in [200, 201]:
+            result = resp.json()
+            return result[0] if isinstance(result, list) else result
             
-        url = f"{base_url}/albums"
-        
-        # Try minimal insert first to avoid schema cache issues with 'return=representation'
-        headers = supabase_client.headers.copy()
-        headers["Prefer"] = "return=minimal"
-        
-        # Start with only essential fields
-        essential_data = {"user_id": user_id, "title": title}
-        resp = requests.post(url, headers=headers, json=essential_data)
-        
-        if resp.status_code in [200, 201, 204]:
-            # Created! Now try to patch the other fields one by one (best effort)
-            album_id = str(uuid.uuid4()) # We should ideally get it back, but minimal doesn't return it.
-            # Wait, if I use minimal, I don't get the ID. That's bad for seeding.
-            
-            # Let's try to get the ID by querying back
-            resp_id = requests.get(f"{url}?user_id=eq.{user_id}&title=eq.{title}&order=created_at.desc&limit=1", headers=supabase_client.headers)
-            if resp_id.status_code == 200 and resp_id.json():
-                album = resp_id.json()[0]
-                # Try to update imageUrl/description
-                patch_data = {}
-                if image_url: patch_data["imageUrl"] = image_url
-                if description: patch_data["description"] = description
-                
-                if patch_data:
-                    requests.patch(f"{url}?id=eq.{album['id']}", headers=supabase_client.headers, json=patch_data)
-                
-                return album
-            return {"id": "temp-" + str(uuid.uuid4()), "title": title}
-        
         print(f"Create Album Error {resp.status_code}: {resp.text}")
         return None
     except Exception as e:
         print(f"create_user_album error: {e}")
         return None
+
+def is_post_saved(user_id: str, post_id: str) -> bool:
+    if not supabase_client: return False
+    try:
+        existing = supabase_client.select("saved_posts", f"user_id=eq.{user_id}&post_id=eq.{post_id}")
+        return len(existing) > 0
+    except:
+        return False
 
 def add_post_to_album(album_id: str, post_id: str):
     if not supabase_client: return False

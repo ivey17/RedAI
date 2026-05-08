@@ -145,6 +145,11 @@ def save_user_post_api(req: PostSaveRequest):
     from db import save_user_post
     success = save_user_post(req.user_id, req.post_id)
     return {"success": success}
+@app.get("/api/users/{user_id}/is-saved/{post_id}")
+def check_is_saved_api(user_id: str, post_id: str):
+    from db import is_post_saved
+    saved = is_post_saved(user_id, post_id)
+    return {"saved": saved}
 
 
 # --- Working Set APIs ---

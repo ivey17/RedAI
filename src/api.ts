@@ -144,6 +144,18 @@ export const api = {
     return response.json();
   },
 
+  isPostSaved: async (postId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${CURRENT_USER_ID}/is-saved/${postId}`);
+      if (!response.ok) return false;
+      const data = await response.json();
+      return data.saved;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  },
+
   // Working Set
   addToWorkingSet: async (post: Post) => {
     try {
