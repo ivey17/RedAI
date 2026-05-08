@@ -12,45 +12,43 @@ interface AlbumPostSelectorSheetProps {
 }
 
 export const AlbumPostSelectorSheet = ({ isOpen, onClose, album, posts, onConfirm }: AlbumPostSelectorSheetProps) => {
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [warning, setWarning] = useState<string | null>(null);
 
   // Reset selection when sheet opens
   useEffect(() => {
     if (isOpen) {
-      setSelectedIds(new Set());
+      setSelectedIds([]);
       setWarning(null);
     }
   }, [isOpen]);
 
   const togglePost = (postId: string) => {
     setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(postId)) {
-        next.delete(postId);
+      if (prev.includes(postId)) {
         setWarning(null);
+        return prev.filter(id => id !== postId);
       } else {
-        if (next.size >= 10) {
+        if (prev.length >= 10) {
           setWarning('最多只能选择 10 篇帖子进行深度决策');
           return prev;
         }
-        next.add(postId);
         setWarning(null);
+        return [...prev, postId];
       }
-      return next;
     });
   };
 
   const handleSelectAll = () => {
-    if (selectedIds.size === posts.length || selectedIds.size === 10) {
+    if (selectedIds.length === posts.length || selectedIds.length === 10) {
       // Deselect all
-      setSelectedIds(new Set());
+      setSelectedIds([]);
       setWarning(null);
     } else {
       // Select up to 10
-      const next = new Set<string>();
+      const next: string[] = [];
       for (let i = 0; i < Math.min(10, posts.length); i++) {
-        next.add(posts[i].id);
+        next.push(posts[i].id);
       }
       setSelectedIds(next);
       if (posts.length > 10) {
@@ -62,15 +60,15 @@ export const AlbumPostSelectorSheet = ({ isOpen, onClose, album, posts, onConfir
   };
 
   const handleConfirm = () => {
-    if (selectedIds.size === 0) {
+    if (selectedIds.length === 0) {
       setWarning('请至少选择 1 篇帖子');
       return;
     }
-    const selectedPosts = posts.filter(p => selectedIds.has(p.id));
+    const selectedPosts = posts.filter(p => selectedIds.includes(p.id));
     onConfirm(selectedPosts);
   };
 
-  const isAllSelected = posts.length > 0 && (selectedIds.size === posts.length || selectedIds.size === 10);
+  const isAllSelected = posts.length > 0 && (selectedIds.length === posts.length || selectedIds.length === 10);
 
   return (
     <AnimatePresence>
@@ -103,7 +101,7 @@ export const AlbumPostSelectorSheet = ({ isOpen, onClose, album, posts, onConfir
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-lg">选择要分析的帖子</h3>
-                  <p className="text-xs text-red-500/80 font-medium">{album?.title} · 已选 {selectedIds.size} / 10</p>
+                  <p className="text-xs text-red-500/80 font-medium">{album?.title} · 已选 {selectedIds.length} / 10</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -147,11 +145,10 @@ export const AlbumPostSelectorSheet = ({ isOpen, onClose, album, posts, onConfir
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {posts.map((post) => {
-                    const isSelected = selectedIds.has(post.id);
+                    const isSelected = selectedIds.includes(post.id);
                     return (
                       <motion.div 
                         key={post.id}
-                        layout
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
@@ -193,7 +190,7 @@ export const AlbumPostSelectorSheet = ({ isOpen, onClose, album, posts, onConfir
                 className="w-full py-4 bg-gradient-to-r from-red-600 to-rose-500 text-white font-bold rounded-2xl shadow-lg shadow-red-200 active:scale-[0.98] transition-transform flex items-center justify-center gap-2 text-lg"
               >
                 <Check size={22} />
-                <span>一键分析 ({selectedIds.size})</span>
+                <span>一键分析 ({selectedIds.length})</span>
               </button>
             </div>
           </motion.div>
