@@ -27,14 +27,16 @@ def read_root():
 
 @app.get("/api/debug-db")
 def debug_db():
-    from db import supabase_client, MOCK_POSTS_STORE, get_all_posts
-    import os
+    import db
+    import os, sys
     return {
         "supabase_url": os.environ.get("SUPABASE_URL"),
         "has_key": bool(os.environ.get("SUPABASE_KEY")),
-        "client_exists": supabase_client is not None,
-        "mock_size": len(MOCK_POSTS_STORE),
-        "posts_count": len(get_all_posts())
+        "client_exists": db.supabase_client is not None,
+        "mock_size": len(db.MOCK_POSTS_STORE),
+        "posts_count": len(db.get_all_posts()),
+        "db_file": getattr(db, "__file__", "unknown"),
+        "sys_path": sys.path
     }
 
 # --- Feed & Album APIs ---
