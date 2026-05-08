@@ -19,14 +19,15 @@ class SupabaseREST:
             "Prefer": "return=representation"
         }
 
+    def _get_url(self, table):
+        base_url = self.url.rstrip('/')
+        if not base_url.endswith('/rest/v1'):
+            base_url = f"{base_url}/rest/v1"
+        return f"{base_url}/{table}"
+
     def select(self, table, filters=None):
         try:
-            # Ensure URL doesn't have double /rest/v1/
-            base_url = self.url.rstrip('/')
-            if not base_url.endswith('/rest/v1'):
-                base_url = f"{base_url}/rest/v1"
-            
-            url = f"{base_url}/{table}?select=*"
+            url = self._get_url(table) + "?select=*"
             if filters:
                 url += f"&{filters}"
             
@@ -41,28 +42,32 @@ class SupabaseREST:
 
     def insert(self, table, data):
         try:
-            resp = requests.post(f"{self.url}/rest/v1/{table}", headers=self.headers, json=data)
+            url = self._get_url(table)
+            resp = requests.post(url, headers=self.headers, json=data)
             return resp.status_code in [200, 201]
         except:
             return False
 
     def delete(self, table, filters):
         try:
-            resp = requests.delete(f"{self.url}/rest/v1/{table}?{filters}", headers=self.headers)
+            url = self._get_url(table) + f"?{filters}"
+            resp = requests.delete(url, headers=self.headers)
             return resp.status_code in [200, 204]
         except:
             return False
 
     def patch(self, table, filters, data):
         try:
-            resp = requests.patch(f"{self.url}/rest/v1/{table}?{filters}", headers=self.headers, json=data)
+            url = self._get_url(table) + f"?{filters}"
+            resp = requests.patch(url, headers=self.headers, json=data)
             return resp.status_code in [200, 204]
         except:
             return False
 
     def bulk_insert(self, table, data_list):
         try:
-            resp = requests.post(f"{self.url}/rest/v1/{table}", headers=self.headers, json=data_list)
+            url = self._get_url(table)
+            resp = requests.post(url, headers=self.headers, json=data_list)
             return resp.status_code in [200, 201]
         except:
             return False
@@ -91,16 +96,27 @@ def get_user_albums(user_id: str):
 
 def create_user_album(user_id: str, title: str, image_url: str, description: str = ""):
     if not supabase_client: return None
-    data = {"user_id": user_id, "title": title, "imageUrl": image_url, "description": description}
-    # Supabase returns the inserted object
-    resp = requests.post(f"{supabase_client.url}/rest/v1/albums", headers=supabase_client.headers, json=data)
-    if resp.status_code in [200, 201]:
-        try:
-            return resp.json()[0]
-        except:
-            return resp.json()
-    print("Create Album Error:", resp.status_code, resp.text)
-    return None
+    try:
+        data = {"user_id": user_id, "title": title, "imageUrl": image_url, "description": description}
+        
+        # Robust URL building
+        base_url = supabase_client.url.rstrip('/')
+        if not base_url.endswith('/rest/v1'):
+            base_url = f"{base_url}/rest/v1"
+            
+        url = f"{base_url}/albums"
+        resp = requests.post(url, headers=supabase_client.headers, json=data)
+        
+        if resp.status_code in [200, 201]:
+            result = resp.json()
+            if isinstance(result, list) and len(result) > 0:
+                return result[0]
+            return result
+        print(f"Create Album Error {resp.status_code}: {resp.text}")
+        return None
+    except Exception as e:
+        print(f"create_user_album error: {e}")
+        return None
 
 def add_post_to_album(album_id: str, post_id: str):
     if not supabase_client: return False

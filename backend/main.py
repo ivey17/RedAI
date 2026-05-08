@@ -81,10 +81,23 @@ def create_album(req: AlbumCreateRequest):
     # Mock behavior if supabase isn't connected
     album_id = str(uuid.uuid4())
     img_url = req.image_url or "https://images.unsplash.com/photo-1516156008625-3a9d0450a1d1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"
-    album = create_user_album(req.user_id, req.title, img_url, req.description)
-    if not album:
-        album = {"id": album_id, "album_id": album_id, "title": req.title, "imageUrl": img_url, "count": 0, "description": req.description}
-    return {"album": album}
+    try:
+        album = create_user_album(req.user_id, req.title, img_url, req.description)
+        if album:
+            return {"album": album}
+    except Exception as e:
+        print(f"create_album exception: {e}")
+        
+    # Fallback to mock if creation failed
+    mock_album = {
+        "id": album_id, 
+        "album_id": album_id, 
+        "title": req.title, 
+        "imageUrl": img_url, 
+        "count": 0, 
+        "description": req.description
+    }
+    return {"album": mock_album}
 
 @app.post("/api/albums/add-post")
 def add_post_to_album_api(req: AlbumAddPostRequest):
@@ -248,6 +261,19 @@ def extract_preferences(req: PreferenceExtractRequest):
             "message": "AI 提取失败，请尝试换种描述方式。",
             "tags": []
         }
+
+@app.get("/api/debug-db")
+def debug_db():
+    from db import supabase_client, get_all_posts
+    import os
+    posts = get_all_posts()
+    return {
+        "supabase_url_env": os.environ.get("SUPABASE_URL"),
+        "supabase_client_exists": supabase_client is not None,
+        "supabase_url_client": supabase_client.url if supabase_client else None,
+        "posts_count": len(posts),
+        "mock_size": 2 # Assuming starter-1 and starter-2
+    }
 
 @app.post("/api/ai/extract-decision-params")
 def extract_decision_params(req: DecisionParamRequest):
