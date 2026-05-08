@@ -21,3 +21,42 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 11px;
+}
+
+.markdown-content th, .markdown-content td {
+  border: 1px solid #f3f4f6;
+  padding: 8px;
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: #fef2f2;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.markdown-content tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.markdown-content h1, .markdown-content h2, .markdown-content h3 {
+  color: #111827;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-weight: 800;
+}
+
+.markdown-content p {
+  margin-bottom: 0.75rem;
+}
+
+.markdown-content ul, .markdown-content ol {
+  padding-left: 1.25rem;
+  margin-bottom: 1rem;
+}

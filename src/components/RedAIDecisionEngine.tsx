@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowLeft, Search, Bell, X, PlusCircle, 
@@ -283,8 +285,10 @@ export const RedAIDecisionEngine = ({ onBack, posts, onRemove, onPostClick, onAd
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100"
                   >
-                    <div className="prose prose-sm text-gray-800 text-xs whitespace-pre-wrap leading-relaxed">
-                      {aiResult}
+                    <div className="markdown-content text-gray-800 text-xs leading-relaxed">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {aiResult || ''}
+                      </ReactMarkdown>
                     </div>
                   </motion.div>
                 )}
